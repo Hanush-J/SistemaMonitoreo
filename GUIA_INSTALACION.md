@@ -16,13 +16,13 @@
 cd /ruta/del/proyecto
 
 # Crear entorno virtual
-python3 -m venv entorno_redes
+python3 -m venv entorno
 
 # Activar entorno (bash/zsh)
-source entorno_redes/bin/activate
+source entorno/bin/activate
 
 # O si usas fish
-source entorno_redes/bin/activate.fish
+source entorno/bin/activate.fish
 ```
 
 ---
@@ -227,7 +227,7 @@ proyecto/
 ├── setup_tickets.sql       # Script de base de datos
 ├── requirements.txt        # Dependencias Python
 ├── GUIA_INSTALACION.md    # Este archivo
-└── entorno_redes/         # Entorno virtual
+└── entorno/         # Entorno virtual
 ```
 
 ---
@@ -237,7 +237,7 @@ proyecto/
 1. **Nunca commits credenciales** en Git
 2. **Crea `.gitignore`**:
    ```
-   entorno_redes/
+   entorno/
    __pycache__/
    *.pyc
    .DS_Store

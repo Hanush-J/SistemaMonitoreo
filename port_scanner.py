@@ -1,5 +1,3 @@
-import sys
-import threading
 import time
 from scapy.all import IP, TCP, UDP, sr1, conf
 from collections import Counter

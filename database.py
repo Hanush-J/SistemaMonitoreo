@@ -1,10 +1,9 @@
 import mysql.connector
 from mysql.connector import Error
-from datetime import datetime, timedelta
-import json
+from datetime import datetime
 
 # Cambia estos datos por los de tu servidor Ubuntu
-DB_HOST = '192.168.68.105'  
+DB_HOST = '172.16.144.128'
 DB_USER = 'joshua'   # El usuario de MySQL
 DB_PASS = 'password'
 DB_NAME = 'sistema_monitoreo'
@@ -233,10 +232,6 @@ def obtener_ticket_por_id(id_ticket):
     except Error as e:
         print(f"[ERROR BD] No se pudo obtener ticket: {e}")
         return None
-
-def actualizar_estado_ticket(id_ticket, nuevo_estado):
-    """Actualiza el estado de un ticket (PENDIENTE, RESUELTO, IGNORADO)."""
-    return actualizar_ticket(id_ticket, estado=nuevo_estado)
 
 def actualizar_ticket(id_ticket, severidad=None, descripcion=None, estado=None,
                       ip_origen=None, puertos_involucrados=None):

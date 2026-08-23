@@ -54,8 +54,8 @@
 cd sistema-seguridad-lan
 
 # 2. Crear entorno
-python3 -m venv entorno_redes
-source entorno_redes/bin/activate
+python3 -m venv entorno
+source entorno/bin/activate
 
 # 3. Instalar dependencias
 pip install -r requirements.txt

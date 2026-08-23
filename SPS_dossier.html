@@ -1,0 +1,967 @@
+<title>SPS — Sistema Proactivo de Seguridad</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --surface-alt: #eef0f4;
+    --border: #d8dce3;
+    --text: #14161c;
+    --text-soft: #565d6b;
+    --accent: #2f52c9;
+    --accent-soft: #e7ecfb;
+    --ok: #147a52;
+    --ok-soft: #e3f5ec;
+    --warn: #92580a;
+    --warn-soft: #fbedd9;
+    --error: #b32530;
+    --error-soft: #fbe4e5;
+    --mono-bg: #eef0f4;
+    --shadow: 0 1px 2px rgba(20,22,28,0.06), 0 8px 24px -12px rgba(20,22,28,0.12);
+
+    --font-display: "Archivo Narrow", "Roboto Condensed", "Arial Narrow", sans-serif;
+    --font-body: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-mono: "Cascadia Code", "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1015;
+      --surface: #171a21;
+      --surface-alt: #1e222b;
+      --border: #2a2f3a;
+      --text: #e8eaf0;
+      --text-soft: #8b93a3;
+      --accent: #6d95ff;
+      --accent-soft: #1b2740;
+      --ok: #3ecf8e;
+      --ok-soft: #123526;
+      --warn: #e8a33d;
+      --warn-soft: #3a2c11;
+      --error: #f0666b;
+      --error-soft: #3a1518;
+      --mono-bg: #10131a;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 12px 28px -12px rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1015;
+    --surface: #171a21;
+    --surface-alt: #1e222b;
+    --border: #2a2f3a;
+    --text: #e8eaf0;
+    --text-soft: #8b93a3;
+    --accent: #6d95ff;
+    --accent-soft: #1b2740;
+    --ok: #3ecf8e;
+    --ok-soft: #123526;
+    --warn: #e8a33d;
+    --warn-soft: #3a2c11;
+    --error: #f0666b;
+    --error-soft: #3a1518;
+    --mono-bg: #10131a;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 12px 28px -12px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; }
+  html { zoom: 1.5; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent-soft); color: var(--text); }
+
+  a { color: var(--accent); }
+  code, .mono { font-family: var(--font-mono); }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .eyebrow .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px; height: 22px;
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    font-size: 11px;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-wrap: balance;
+    margin: 0 0 0.4em 0;
+  }
+
+  /* ---------- shell layout ---------- */
+  .shell {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+  nav.toc {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 40px 20px 40px 32px;
+    border-right: 1px solid var(--border);
+  }
+  nav.toc .brand {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: 0.02em;
+    margin-bottom: 4px;
+  }
+  nav.toc .brand-sub {
+    font-size: 12px;
+    color: var(--text-soft);
+    margin-bottom: 32px;
+  }
+  nav.toc ol {
+    list-style: none;
+    margin: 0; padding: 0;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  nav.toc a {
+    display: flex;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--text-soft);
+    font-size: 13px;
+    padding: 7px 10px;
+    border-radius: 6px;
+  }
+  nav.toc a:hover { background: var(--surface-alt); color: var(--text); }
+  nav.toc a .n { font-family: var(--font-mono); color: var(--accent); width: 16px; }
+
+  main { padding: 40px 48px 120px; min-width: 0; }
+
+  .cover {
+    padding: 64px 0 56px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 56px;
+  }
+  .cover .mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 26px;
+  }
+  .cover .mark .glyph {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cover .mark .glyph svg { width: 24px; height: 24px; }
+  .cover .mark .name {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .cover h1 {
+    font-size: clamp(34px, 5vw, 54px);
+    letter-spacing: -0.01em;
+    max-width: 16ch;
+  }
+  .cover .lede {
+    font-size: 18px;
+    color: var(--text-soft);
+    max-width: 60ch;
+    margin-top: 14px;
+  }
+  .cover .meta {
+    margin-top: 32px;
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-soft);
+  }
+  .cover .meta strong { color: var(--text); font-weight: 500; }
+
+  section.block {
+    max-width: 780px;
+    margin-bottom: 72px;
+    scroll-margin-top: 24px;
+  }
+  section.block.wide { max-width: none; }
+  section.block > p { color: var(--text-soft); }
+  section.block h2 { font-size: 26px; }
+  section.block .dek {
+    font-size: 16px;
+    color: var(--text-soft);
+    max-width: 62ch;
+    margin-bottom: 28px;
+  }
+
+  /* ---------- stack list (module map) ---------- */
+  .stacklist {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+  .stacklist .row {
+    display: grid;
+    grid-template-columns: 170px 1fr;
+    gap: 18px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    align-items: baseline;
+  }
+  .stacklist .row:last-child { border-bottom: none; }
+  .stacklist .row .file {
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    color: var(--accent);
+  }
+  .stacklist .row .desc { font-size: 14px; color: var(--text-soft); }
+  .stacklist .row .desc b { color: var(--text); font-weight: 600; }
+
+  /* ---------- diagram figure ---------- */
+  figure.diagram {
+    margin: 0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    padding: 28px 24px 20px;
+    box-shadow: var(--shadow);
+  }
+  figure.diagram .frame { overflow-x: auto; }
+  figure.diagram svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+  figcaption {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-soft);
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+  }
+  figcaption b { color: var(--text); }
+
+  /* ---------- classification cards ---------- */
+  .sev-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .sev-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 18px 20px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+  .sev-card .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    padding: 4px 9px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .sev-card .chip::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .sev-card.ok .chip { background: var(--ok-soft); color: var(--ok); }
+  .sev-card.warn .chip { background: var(--warn-soft); color: var(--warn); }
+  .sev-card.error .chip { background: var(--error-soft); color: var(--error); }
+  .sev-card h3 { font-size: 16px; margin-bottom: 8px; }
+  .sev-card p { font-size: 13.5px; color: var(--text-soft); margin: 0 0 10px; }
+  .sev-card ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--text-soft); }
+  .sev-card ul li { margin-bottom: 4px; }
+  .sev-card .ticket {
+    margin-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-soft);
+    border-top: 1px dashed var(--border);
+    padding-top: 10px;
+  }
+  .sev-card .ticket b { color: var(--text); }
+
+  .callout {
+    margin-top: 20px;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    padding: 14px 18px;
+    border-radius: 0 8px 8px 0;
+    font-size: 13.5px;
+    color: var(--text);
+  }
+  .callout b { color: var(--accent); }
+
+  /* ---------- mode cards (port scan) ---------- */
+  .mode-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .mode-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+  .mode-card .tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-soft);
+    margin-bottom: 6px;
+  }
+  .mode-card h3 { font-size: 15.5px; margin-bottom: 8px; }
+  .mode-card p { font-size: 13px; color: var(--text-soft); margin: 0; }
+
+  /* ---------- data table ---------- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  thead th {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    background: var(--surface-alt);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.mono, th.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  td.field { color: var(--accent); font-family: var(--font-mono); font-size: 12.5px; }
+
+  /* ---------- bugfix table ---------- */
+  .fix-table .sev {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+  .fix-table .sev.crash { background: var(--error-soft); color: var(--error); }
+  .fix-table .sev.silent { background: var(--warn-soft); color: var(--warn); }
+  .fix-table .sev.quality { background: var(--accent-soft); color: var(--accent); }
+
+  /* ---------- code blocks ---------- */
+  pre {
+    background: var(--mono-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.65;
+    margin: 0;
+  }
+  /* ---------- barra de IP ---------- */
+  .ip-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    position: sticky;
+    top: 8px;
+    z-index: 5;
+  }
+  .ip-bar label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .ip-bar input {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 7px 10px;
+    background: var(--surface);
+    color: var(--text);
+    width: 190px;
+  }
+  .ip-bar input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .ip-bar .ip-hint { font-size: 12px; color: var(--text-soft); }
+  .ip-tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 0 5px;
+    line-height: 1.5;
+  }
+
+  /* ---------- lista de comandos ---------- */
+  .cmd-list { display: flex; flex-direction: column; gap: 22px; }
+  .cmd-step { display: grid; grid-template-columns: 28px 1fr; gap: 14px; }
+  .cmd-step .cmd-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-soft);
+  }
+  .cmd-step.muted .cmd-num { border-style: dashed; opacity: 0.7; }
+  .cmd-body { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .cmd-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .cmd-note { font-weight: 400; color: var(--text-soft); font-size: 12.5px; }
+  .cmd-desc { font-size: 13px; color: var(--text-soft); line-height: 1.5; }
+  .cmd-desc b { color: var(--text); font-weight: 600; }
+
+  .cmdcard {
+    position: relative;
+    background: var(--mono-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .cmdcard pre {
+    background: transparent;
+    border: none;
+    margin: 0;
+    padding: 12px 92px 12px 14px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .copy-btn {
+    position: absolute;
+    top: 8px; right: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    color: var(--text-soft);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+  .copy-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .copy-btn.copied { color: var(--ok); border-color: var(--ok); }
+
+  footer.end {
+    max-width: 780px;
+    padding-top: 28px;
+    border-top: 1px solid var(--border);
+    font-size: 12.5px;
+    color: var(--text-soft);
+  }
+
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; }
+    nav.toc { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    main { padding: 32px 20px 100px; }
+    .sev-grid, .mode-grid { grid-template-columns: 1fr; }
+    .stacklist .row { grid-template-columns: 1fr; gap: 4px; }
+  }
+
+  @media print {
+    body { background: #fff; }
+    nav.toc { display: none; }
+    .shell { grid-template-columns: 1fr; max-width: none; }
+    main { padding: 0 24px; }
+    section.block { break-inside: avoid; margin-bottom: 40px; }
+    .cover { break-after: page; }
+    figure.diagram, .stacklist, .tablewrap, .sev-card, .mode-card { box-shadow: none; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    section.block { animation: rise 0.5s ease both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  }
+</style>
+
+<div class="shell">
+  <nav class="toc">
+    <div class="brand">SPS</div>
+    <div class="brand-sub">Sistema Proactivo de Seguridad</div>
+    <ol>
+      <li><a href="#objetivo"><span class="n">01</span> Qué es</a></li>
+      <li><a href="#arquitectura"><span class="n">02</span> Arquitectura</a></li>
+      <li><a href="#pipeline"><span class="n">03</span> Pipeline de análisis</a></li>
+      <li><a href="#clasificacion"><span class="n">04</span> Clasificación</a></li>
+      <li><a href="#puertos"><span class="n">05</span> Escaneo de puertos</a></li>
+      <li><a href="#bd"><span class="n">06</span> Base de datos</a></li>
+      <li><a href="#correcciones"><span class="n">07</span> Correcciones</a></li>
+      <li><a href="#pruebas"><span class="n">08</span> Cómo probarlo</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <div class="cover">
+      <div class="mark">
+        <span class="glyph">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 9 4.6-.3 8-4 8-9V5z"/></svg>
+        </span>
+        <span class="name">SPS</span>
+      </div>
+      <h1>Sistema Proactivo de Seguridad</h1>
+      <p class="lede">Monitoreo de tráfico LAN en tiempo real con un modelo de lenguaje local (Ollama) como analista de primer nivel, más un módulo de auditoría activa por escaneo de puertos.</p>
+      <div class="meta">
+        <span><strong>Stack</strong> Python · CustomTkinter · Scapy · Ollama · MySQL</span>
+      </div>
+    </div>
+
+    <section class="block" id="objetivo">
+      <div class="eyebrow"><span class="num">01</span> Qué es</div>
+      <h2>Un SOC de bolsillo, corriendo en tu propia GPU</h2>
+      <p class="dek">SPS observa el tráfico de una red local, le pide a un modelo de lenguaje que lo interprete como lo haría un analista junior, y deja un ticket cuando algo se sale del patrón. Todo el análisis corre en hardware propio — sin mandar tráfico a ningún servicio en la nube.</p>
+      <p>El sistema resuelve dos problemas distintos bajo un mismo panel: <b style="color:var(--text)">vigilancia pasiva</b> (¿qué está pasando en la red ahora mismo?) y <b style="color:var(--text)">auditoría activa</b> (¿qué puertos tiene abiertos una máquina específica?). El primero corre solo, en segundo plano; el segundo lo dispara el usuario contra un host puntual.</p>
+    </section>
+
+    <section class="block wide" id="arquitectura">
+      <div class="eyebrow"><span class="num">02</span> Arquitectura</div>
+      <h2>Seis archivos, cada uno con una responsabilidad</h2>
+      <p class="dek">Sin frameworks pesados: una capa de UI, una de análisis, una de auditoría de puertos y una de persistencia. <code>theme.py</code> es lo único "transversal" — la paleta que comparten las dos ventanas.</p>
+      <div class="stacklist">
+        <div class="row"><div class="file">login.py</div><div class="desc"><b>Puerta de entrada.</b> Valida usuario/contraseña contra MySQL y, si el login es correcto, abre el dashboard.</div></div>
+        <div class="row"><div class="file">app.py</div><div class="desc"><b>Dashboard principal.</b> Arranca los dos hilos de monitoreo, dibuja el semáforo, la consola, los tickets y las gráficas.</div></div>
+        <div class="row"><div class="file">analisis_ia.py</div><div class="desc"><b>Captura y criterio.</b> Detecta la interfaz de red, hace <span class="mono">sniff</span> con Scapy, arma el reporte estadístico y consulta a Ollama.</div></div>
+        <div class="row"><div class="file">port_scanner.py</div><div class="desc"><b>Auditoría activa.</b> Escaneo SYN por rango, por lista VIP predefinida o por selección personalizada.</div></div>
+        <div class="row"><div class="file">database.py</div><div class="desc"><b>Persistencia.</b> Conexión a MySQL, CRUD de tickets, logs de ejecución y estadísticas semanales.</div></div>
+        <div class="row"><div class="file">theme.py</div><div class="desc"><b>Un solo lugar para los colores.</b> Paleta y tipografía compartidas por <span class="mono">login.py</span> y <span class="mono">app.py</span>.</div></div>
+      </div>
+    </section>
+
+    <section class="block wide" id="pipeline">
+      <div class="eyebrow"><span class="num">03</span> Pipeline de análisis</div>
+      <h2>Dos hilos, una cola de tamaño 1</h2>
+      <p class="dek">El hilo que captura tráfico nunca espera al que consulta la IA — si la IA sigue ocupada cuando llega una ventana nueva, la vieja se descarta. Así el sistema siempre reacciona sobre el tráfico más reciente, no sobre una fila de análisis atrasados.</p>
+
+      <figure class="diagram">
+        <div class="frame">
+          <svg viewBox="0 0 980 460" role="img" aria-label="Diagrama del pipeline: el hilo sniffer captura tráfico cada 5 segundos excluyendo el host de MySQL, lo deposita en una cola de tamaño 1 que descarta el reporte anterior si no fue consumido, el hilo de IA lo envía a Ollama, y según la etiqueta de respuesta el veredicto se ramifica en tráfico normal (sin ticket), anomalía o crítico (con ticket en MySQL).">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="currentColor" />
+              </marker>
+            </defs>
+            <g fill="none" stroke="currentColor" stroke-width="1.2" font-family="var(--font-mono)" font-size="12">
+
+              <!-- Interfaces -->
+              <rect x="20" y="30" width="150" height="46" rx="7" />
+              <text x="95" y="49" text-anchor="middle" fill="currentColor">wlan0 + lo</text>
+              <text x="95" y="65" text-anchor="middle" fill="currentColor" opacity="0.6" font-size="10">interfaces escuchadas</text>
+
+              <line x1="170" y1="53" x2="230" y2="53" marker-end="url(#arrow)" />
+              <text x="200" y="44" text-anchor="middle" font-size="10" opacity="0.7">sniff 5s</text>
+
+              <!-- Hilo sniffer -->
+              <rect x="230" y="15" width="230" height="240" rx="10" stroke-dasharray="3 4" opacity="0.5"/>
+              <text x="245" y="34" font-size="10" letter-spacing="1" opacity="0.6">HILO SNIFFER</text>
+
+              <rect x="252" y="50" width="186" height="50" rx="7" />
+              <text x="345" y="70" text-anchor="middle">captura paquetes TCP/UDP</text>
+              <text x="345" y="86" text-anchor="middle" font-size="10" opacity="0.6">filtro: excluye host MySQL</text>
+
+              <line x1="345" y1="100" x2="345" y2="130" marker-end="url(#arrow)" />
+
+              <rect x="252" y="130" width="186" height="60" rx="7" />
+              <text x="345" y="152" text-anchor="middle">reporte estadístico</text>
+              <text x="345" y="168" text-anchor="middle" font-size="9.5" opacity="0.6">puertos distintos +</text>
+              <text x="345" y="181" text-anchor="middle" font-size="9.5" opacity="0.6">puertos sensibles</text>
+
+              <line x1="345" y1="190" x2="345" y2="220" marker-end="url(#arrow)" />
+
+              <!-- Cola -->
+              <rect x="500" y="120" width="140" height="70" rx="8" stroke="var(--accent)" stroke-width="1.6"/>
+              <text x="570" y="145" text-anchor="middle" fill="var(--accent)" font-weight="700">cola (max=1)</text>
+              <text x="570" y="163" text-anchor="middle" font-size="9.5" opacity="0.75">descarta el reporte</text>
+              <text x="570" y="176" text-anchor="middle" font-size="9.5" opacity="0.75">viejo si no se leyó</text>
+
+              <line x1="345" y1="220" x2="345" y2="235" />
+              <line x1="345" y1="235" x2="500" y2="155" marker-end="url(#arrow)" />
+              <text x="440" y="220" font-size="10" opacity="0.7">put()</text>
+
+              <line x1="640" y1="155" x2="700" y2="155" marker-end="url(#arrow)" />
+              <text x="668" y="145" text-anchor="middle" font-size="10" opacity="0.7">get()</text>
+
+              <!-- Hilo IA -->
+              <rect x="700" y="15" width="260" height="240" rx="10" stroke-dasharray="3 4" opacity="0.5"/>
+              <text x="715" y="34" font-size="10" letter-spacing="1" opacity="0.6">HILO INTELIGENCIA</text>
+
+              <rect x="720" y="130" width="220" height="55" rx="7" />
+              <text x="830" y="150" text-anchor="middle">Ollama · qwen2.5-coder</text>
+              <text x="830" y="166" text-anchor="middle" font-size="10" opacity="0.6">GPU · keep_alive 30m</text>
+
+              <line x1="830" y1="185" x2="830" y2="215" marker-end="url(#arrow)" />
+              <rect x="720" y="215" width="220" height="40" rx="7" />
+              <text x="830" y="239" text-anchor="middle">veredicto ([TAG] + texto)</text>
+
+              <!-- Ramas -->
+              <line x1="345" y1="255" x2="345" y2="290" />
+              <line x1="830" y1="255" x2="830" y2="290" />
+              <line x1="345" y1="290" x2="830" y2="290" />
+              <line x1="587" y1="290" x2="587" y2="320" marker-end="url(#arrow)" />
+
+              <rect x="60" y="330" width="200" height="100" rx="10" stroke="var(--ok)" />
+              <text x="160" y="352" text-anchor="middle" fill="var(--ok)" font-weight="700">[TRÁFICO NORMAL]</text>
+              <text x="160" y="374" text-anchor="middle" font-size="10.5" opacity="0.75">semáforo verde</text>
+              <text x="160" y="392" text-anchor="middle" font-size="10.5" opacity="0.75">NO se crea ticket</text>
+
+              <rect x="290" y="330" width="200" height="100" rx="10" stroke="var(--warn)" />
+              <text x="390" y="352" text-anchor="middle" fill="var(--warn)" font-weight="700">[ANOMALIA]</text>
+              <text x="390" y="374" text-anchor="middle" font-size="10.5" opacity="0.75">puerto sensible o</text>
+              <text x="390" y="390" text-anchor="middle" font-size="10.5" opacity="0.75">muchos puertos distintos</text>
+
+              <rect x="520" y="330" width="200" height="100" rx="10" stroke="var(--error)" />
+              <text x="620" y="352" text-anchor="middle" fill="var(--error)" font-weight="700">[ALERTA CRÍTICA]</text>
+              <text x="620" y="374" text-anchor="middle" font-size="10.5" opacity="0.75">señales fuertes o</text>
+              <text x="620" y="390" text-anchor="middle" font-size="10.5" opacity="0.75">Ollama caído</text>
+
+              <rect x="750" y="330" width="190" height="100" rx="10" opacity="0.6" />
+              <text x="845" y="352" text-anchor="middle" opacity="0.85" font-weight="700">[OMITIR]</text>
+              <text x="845" y="374" text-anchor="middle" font-size="10.5" opacity="0.6">timeout de Ollama</text>
+              <text x="845" y="390" text-anchor="middle" font-size="10.5" opacity="0.6">no es señal de red</text>
+
+              <line x1="390" y1="430" x2="390" y2="450" />
+              <line x1="620" y1="430" x2="620" y2="450" />
+              <line x1="390" y1="450" x2="620" y2="450" marker-end="url(#arrow)" />
+              <text x="505" y="446" text-anchor="middle" font-size="10" opacity="0.7">crear_ticket()</text>
+            </g>
+          </svg>
+        </div>
+        <figcaption><b>Lo que hace que esto funcione sin acumular atrasos:</b> el filtro de captura excluye el host de MySQL (si no, el propio sistema se detecta a sí mismo cada vez que escribe un log), y la cola de tamaño 1 garantiza que la IA siempre analiza la ventana más reciente, no una fila de reportes viejos.</figcaption>
+      </figure>
+
+      <div class="callout"><b>Por qué la cola importa:</b> sin el límite, un solo análisis lento (Ollama "frío") dejaba acumular hasta 15-20 reportes atrasados que luego se procesaban todos de golpe — el semáforo mostraba tráfico de hace un minuto, no el actual.</div>
+    </section>
+
+    <section class="block wide" id="clasificacion">
+      <div class="eyebrow"><span class="num">04</span> Clasificación</div>
+      <h2>Qué entra en cada categoría</h2>
+      <p class="dek">La IA recibe el reporte más dos campos calculados a propósito para ella: <span class="mono">puertos sensibles detectados</span> y <span class="mono">cantidad de puertos distintos contactados</span>. Esas dos señales son las que deciden la etiqueta.</p>
+
+      <div class="sev-grid">
+        <div class="sev-card ok">
+          <span class="chip">NORMAL</span>
+          <h3>Tráfico esperado</h3>
+          <p>Puertos 443 (HTTPS) y 53 (DNS) se tratan como ruido de fondo siempre, sin importar el volumen. Sin puertos sensibles ni un número alto de puertos distintos.</p>
+          <div class="ticket"><b>Ticket:</b> no se crea. El semáforo pasa a verde y ya.</div>
+        </div>
+        <div class="sev-card warn">
+          <span class="chip">ANOMALIA</span>
+          <h3>Indicio de escaneo</h3>
+          <ul>
+            <li>Aparece un puerto sensible (22, 21, 3306, 445, 3389...)</li>
+            <li>o se tocaron muchos puertos distintos (~15-20+) hacia una sola IP</li>
+          </ul>
+          <div class="ticket"><b>Ticket:</b> sí, severidad ANOMALIA, queda PENDIENTE.</div>
+        </div>
+        <div class="sev-card error">
+          <span class="chip">CRÍTICO</span>
+          <h3>Riesgo alto</h3>
+          <ul>
+            <li>Combinación fuerte de señales de ANOMALIA</li>
+            <li>o Ollama no responde (se asume lo peor si no se puede analizar)</li>
+          </ul>
+          <div class="ticket"><b>Ticket:</b> sí, severidad CRITICO, queda PENDIENTE.</div>
+        </div>
+      </div>
+
+      <div class="callout"><b>Honestidad técnica:</b> no hay un umbral numérico duro entre ANOMALIA y CRÍTICO — el prompt le da a la IA ambas señales y la deja decidir la severidad dentro de ese margen. Es una decisión de criterio del modelo, no una regla fija en el código.</div>
+    </section>
+
+    <section class="block wide" id="puertos">
+      <div class="eyebrow"><span class="num">05</span> Escaneo de puertos</div>
+      <h2>Auditoría activa, no monitoreo pasivo</h2>
+      <p class="dek">Envía paquetes SYN reales (Scapy) a un host y mide qué puertos responden. Es una acción que el usuario dispara a propósito contra un objetivo — no pasa por la IA.</p>
+
+      <div class="mode-grid">
+        <div class="mode-card">
+          <div class="tag">MODO 1</div>
+          <h3>Rango completo</h3>
+          <p>Barre un rango numérico (ej. 1–1000) definido a mano. El más lento, el más exhaustivo.</p>
+        </div>
+        <div class="mode-card">
+          <div class="tag">MODO 2</div>
+          <h3>Puertos comunes VIP</h3>
+          <p>Lista fija de 19 puertos clave (FTP, SSH, SMB, RDP, bases de datos...). El modo por defecto.</p>
+        </div>
+        <div class="mode-card">
+          <div class="tag">MODO 3</div>
+          <h3>Personalizado</h3>
+          <p>El usuario marca checkboxes de una lista de 11 puertos VIP para armar su propia auditoría.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block wide" id="bd">
+      <div class="eyebrow"><span class="num">06</span> Base de datos</div>
+      <h2>Dos tablas, ambas en MySQL</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Tabla</th><th>Campo</th><th>Para qué</th></tr></thead>
+          <tbody>
+            <tr><td rowspan="6" class="mono">tickets</td><td class="field">id_ticket, fecha_hora</td><td>Identidad y momento de la detección</td></tr>
+            <tr><td class="field">severidad</td><td>NORMAL · ANOMALIA · CRITICO</td></tr>
+            <tr><td class="field">descripcion</td><td>El veredicto textual que dio la IA</td></tr>
+            <tr><td class="field">interfaz, ip_origen, puertos_involucrados</td><td>Contexto de red del incidente</td></tr>
+            <tr><td class="field">estado</td><td>PENDIENTE · RESUELTO · IGNORADO — editable desde la pestaña de gestión</td></tr>
+            <tr><td class="field">(gestión)</td><td>Filtro por estado, edición en ventana modal</td></tr>
+            <tr><td class="mono">logs_ejecucion</td><td class="field">tipo_log, mensaje, fecha_hora</td><td>Espejo en BD de todo lo que pasa por la consola en vivo</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="block wide" id="correcciones">
+      <div class="eyebrow"><span class="num">07</span> Correcciones</div>
+      <h2>Lo que estaba roto y cómo se arregló</h2>
+      <p class="dek">Registro honesto de los problemas reales encontrados durante el desarrollo — útil como evidencia de proceso de depuración, no solo de resultado final.</p>
+      <div class="tablewrap fix-table">
+        <table>
+          <thead><tr><th>Problema</th><th>Causa raíz</th><th>Arreglo</th></tr></thead>
+          <tbody>
+            <tr><td><span class="sev crash">crash</span> Escaneo de puertos tronaba al usarlo</td><td>Widgets duplicados por copy-paste; <span class="mono">combo_modo_escaneo</span> nunca existía en la ventana principal</td><td>Se limpiaron los bloques duplicados y se conectaron los controles reales</td></tr>
+            <tr><td><span class="sev silent">silencioso</span> La IA nunca se ejecutaba</td><td>Interfaz de red hardcodeada a <span class="mono">wlan0/lo/vmnet8</span>, sin relación con el hardware real</td><td>Detección real vía la ruta por defecto del sistema (<span class="mono">conf.route.route()</span>)</td></tr>
+            <tr><td><span class="sev silent">silencioso</span> Tickets "ANOMALIA" que eran solo timeouts</td><td>Ollama en frío (modelo descargado de RAM) tardaba más que el timeout de 40s</td><td><span class="mono">keep_alive</span> de 30 min + timeout más generoso + etiqueta <span class="mono">[OMITIR]</span> que no genera ticket</td></tr>
+            <tr><td><span class="sev silent">silencioso</span> Reportes atrasados procesados en ráfaga</td><td>La captura seguía cada 5s sin esperar a que la IA terminara</td><td>Cola acotada a tamaño 1: se descarta el reporte viejo si llega uno nuevo</td></tr>
+            <tr><td><span class="sev quality">calidad</span> Alucinaciones y falsos negativos</td><td><span class="mono">phi3</span> inventaba escenarios ajenos al reporte y no detectaba escaneos obvios</td><td>Cambio a <span class="mono">qwen2.5-coder:7b</span>, más consistente en las pruebas comparativas</td></tr>
+            <tr><td><span class="sev silent">silencioso</span> El sistema se auto-reportaba como sospechoso</td><td>Sus propias conexiones a MySQL (puerto 3306) se veían como "puerto sensible"</td><td>El filtro de captura excluye el host de la base de datos</td></tr>
+            <tr><td><span class="sev silent">silencioso</span> Escaneos contra la propia IP no se detectaban</td><td>Ese tráfico nunca sale por la tarjeta física — Linux lo enruta por loopback</td><td>Se escucha también la interfaz <span class="mono">lo</span> en paralelo</td></tr>
+            <tr><td><span class="sev quality">calidad</span> Reporte no le decía a la IA "cuántos puertos distintos"</td><td>Solo mostraba el top-5 por frecuencia, invisibilizando escaneos de cientos de puertos</td><td>Se agregaron los campos explícitos de puertos distintos y puertos sensibles</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="block wide" id="pruebas">
+      <div class="eyebrow"><span class="num">08</span> Cómo probarlo</div>
+      <h2>Guion de demostración</h2>
+      <p class="dek">Todos los comandos, en orden, desde que entras a la carpeta del proyecto. Los que necesitan un objetivo usan el campo de IP de abajo — cámbialo y se actualizan solos. Sintaxis en fish (shell por defecto); requieren <span class="mono">nc</span> (paquete <span class="mono">openbsd-netcat</span>) y <span class="mono">nmap</span> instalados.</p>
+
+      <div class="ip-bar">
+        <label for="ip-objetivo">IP objetivo</label>
+        <input id="ip-objetivo" type="text" placeholder="192.168.1.10" autocomplete="off" spellcheck="false" />
+        <span class="ip-hint">solo la IP, sin máscara (nada de <span class="mono">/22</span>) — se sustituye en los comandos marcados <span class="ip-tag">IP</span></span>
+      </div>
+
+      <div class="cmd-list">
+
+        <div class="cmd-step">
+          <div class="cmd-num">1</div>
+          <div class="cmd-body">
+            <div class="cmd-title">Entrar al proyecto</div>
+            <div class="cmdcard">
+              <pre><code id="c1" data-cmd="cd /home/joshuarf/SPS_project"></code></pre>
+              <button class="copy-btn" data-target="c1">Copiar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cmd-step">
+          <div class="cmd-num">2</div>
+          <div class="cmd-body">
+            <div class="cmd-title">Arrancar el sistema</div>
+            <div class="cmd-desc">Levanta la interfaz principal: conecta a la base de datos, arranca la captura en vivo y la consulta a Ollama. Se deja corriendo en primer plano — desde aquí salen los tickets <b>NORMAL / ANOMALIA / CRITICO</b> que generan los comandos de abajo.</div>
+            <div class="cmdcard">
+              <pre><code id="c3" data-cmd="sudo ./entorno/bin/python login.py"></code></pre>
+              <button class="copy-btn" data-target="c3">Copiar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cmd-step">
+          <div class="cmd-num">3</div>
+          <div class="cmd-body">
+            <div class="cmd-title">Puertos sensibles <span class="cmd-note">(regla de "puerto sensible") · <span class="ip-tag">IP</span></span></div>
+            <div class="cmd-desc">Toca uno por uno 8 puertos de servicios delicados (SSH, FTP, Telnet, SMB, MSSQL, MySQL, RDP, VNC) contra el objetivo. Simula a un atacante tanteando qué servicios están expuestos — con que aparezca <b>uno solo</b> entre los contactados, la regla 2 del analizador lo marca como ANOMALIA/CRITICO.</div>
+            <div class="cmdcard">
+              <pre><code id="c9" data-cmd="for p in 21 22 23 445 1433 3306 3389 5900; nc -zv -w1 {IP} $p; end"></code></pre>
+              <button class="copy-btn" data-target="c9">Copiar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cmd-step">
+          <div class="cmd-num">4</div>
+          <div class="cmd-body">
+            <div class="cmd-title">Barrido de 200 puertos <span class="cmd-note">(regla de "muchos puertos distintos") · <span class="ip-tag">IP</span></span></div>
+            <div class="cmd-desc">Recorre secuencialmente los puertos 1 al 200 contra el mismo objetivo — un escaneo de reconocimiento clásico, tipo nmap manual. Aunque los puertos individuales sean comunes, tocar más de 15-20 puertos distintos hacia una sola IP dispara la regla 3 (patrón de escaneo).</div>
+            <div class="cmdcard">
+              <pre><code id="c10" data-cmd="for p in (seq 1 200); nc -zv -w1 {IP} $p 2>/dev/null; end"></code></pre>
+              <button class="copy-btn" data-target="c10">Copiar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cmd-step">
+          <div class="cmd-num">5</div>
+          <div class="cmd-body">
+            <div class="cmd-title">Fuerza bruta simulada a SSH <span class="cmd-note"><span class="ip-tag">IP</span></span></div>
+            <div class="cmd-desc">Lanza 10 intentos de login SSH seguidos con un usuario que no existe (<b>fakeuser</b>). Simula fuerza bruta/credential stuffing contra un servicio expuesto — el propio puerto 22 ya es "sensible" (regla 2), y el volumen de intentos repetidos refuerza el patrón.</div>
+            <div class="cmdcard">
+              <pre><code id="c11" data-cmd="for i in (seq 1 10); ssh -o ConnectTimeout=1 -o BatchMode=yes fakeuser@{IP} exit 2>/dev/null; end"></code></pre>
+              <button class="copy-btn" data-target="c11">Copiar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cmd-step">
+          <div class="cmd-num">6</div>
+          <div class="cmd-body">
+            <div class="cmd-title">Ráfaga de volumen a un solo puerto <span class="cmd-note"><span class="ip-tag">IP</span></span></div>
+            <div class="cmd-desc">Con <b>scapy</b>, dispara 800 paquetes SYN seguidos contra el puerto 80. A diferencia de los escaneos (que reparten tráfico entre muchos puertos), esto concentra volumen en uno solo — el patrón típico de un SYN flood / ataque de denegación de servicio.</div>
+            <div class="cmdcard">
+              <pre><code id="c12" data-cmd="sudo ./entorno/bin/python simular_flood.py {IP} 80 800"></code></pre>
+              <button class="copy-btn" data-target="c12">Copiar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cmd-step">
+          <div class="cmd-num">7</div>
+          <div class="cmd-body">
+            <div class="cmd-title">Réplica de pcaps reales</div>
+            <div class="cmd-desc">Reproduce capturas de tráfico reales — no generadas por estos scripts — para poner a prueba el sistema con ataques documentados públicamente, no solo simulados.</div>
+            <div class="cmdcard">
+              <pre><code id="c13" data-cmd='sudo ./entorno/bin/python simular_ataque.py "capturas_pcap/2026-01-10-ten-days-of-scans-and-probes-and-web-traffic-hitting-my-web-server.pcap"'></code></pre>
+              <button class="copy-btn" data-target="c13">Copiar</button>
+            </div>
+            <div class="cmd-desc">Diez días de escaneos y sondeos reales de internet contra un servidor web. Toca decenas de puertos distintos, varios sensibles (22, 23, 445, 3389) — dispara CRITICO por la regla de "muchos puertos", sin ser un escaneo artificial.</div>
+            <div class="cmdcard">
+              <pre><code id="c14" data-cmd='sudo ./entorno/bin/python simular_ataque.py "capturas_pcap/2026-01-20-VIP-Recovery-infection-with-FTP-traffic.pcap"'></code></pre>
+              <button class="copy-btn" data-target="c14">Copiar</button>
+            </div>
+            <div class="cmd-desc">Infección real "VIP Recovery" que exfiltra datos robados por FTP (puerto 21). Dispara CRITICO por la regla de "puerto sensible".</div>
+            <div class="cmdcard">
+              <pre><code id="c15" data-cmd='sudo ./entorno/bin/python simular_ataque.py "capturas_pcap/2026-02-03-GuLoader-for-AgentTesla-style-infection-with-FTP-data-exfil.pcap"'></code></pre>
+              <button class="copy-btn" data-target="c15">Copiar</button>
+            </div>
+            <div class="cmd-desc">Infección real de GuLoader (estilo AgentTesla): roba credenciales y las exfiltra por FTP. Mismo disparador que la anterior — puerto sensible 21 — pero de un malware distinto.</div>
+          </div>
+        </div>
+
+        <div class="cmd-step">
+          <div class="cmd-num">8</div>
+          <div class="cmd-body">
+            <div class="cmd-title">nmap directo <span class="cmd-note"><span class="ip-tag">IP</span></span></div>
+            <div class="cmd-desc">Escaneo real con <b>nmap</b> (herramienta externa, no parte del sistema) contra los primeros 1000 puertos del objetivo. Sirve de contraste: cómo se ve un escaneo "de libro" frente a las simulaciones caseras con <span class="mono">nc</span>.</div>
+            <div class="cmdcard">
+              <pre><code id="c16" data-cmd="nmap -p 1-1000 {IP}"></code></pre>
+              <button class="copy-btn" data-target="c16">Copiar</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <footer class="end">
+      SPS · Sistema Proactivo de Seguridad — UTCJ
+    </footer>
+  </main>
+</div>
+
+<script>
+(function () {
+  var ipInput = document.getElementById('ip-objetivo');
+  var comandos = Array.prototype.slice.call(document.querySelectorAll('[data-cmd]'));
+
+  function ipActual() {
+    var valor = (ipInput.value || '').trim();
+    return valor || '<IP>';
+  }
+
+  function render() {
+    var ip = ipActual();
+    comandos.forEach(function (el) {
+      var plantilla = el.getAttribute('data-cmd');
+      el.textContent = plantilla.split('{IP}').join(ip);
+    });
+  }
+
+  ipInput.addEventListener('input', render);
+  render();
+
+  function copiar(texto, boton) {
+    var textoOriginal = boton.textContent;
+    function marcar(ok) {
+      boton.textContent = ok ? 'Copiado' : 'No se pudo copiar';
+      boton.classList.toggle('copied', ok);
+      setTimeout(function () {
+        boton.textContent = textoOriginal;
+        boton.classList.remove('copied');
+      }, 1400);
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(texto).then(
+        function () { marcar(true); },
+        function () { copiarConTextarea(texto, marcar); }
+      );
+    } else {
+      copiarConTextarea(texto, marcar);
+    }
+  }
+
+  function copiarConTextarea(texto, marcar) {
+    try {
+      var area = document.createElement('textarea');
+      area.value = texto;
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.focus();
+      area.select();
+      var ok = document.execCommand('copy');
+      document.body.removeChild(area);
+      marcar(ok);
+    } catch (e) {
+      marcar(false);
+    }
+  }
+
+  document.querySelectorAll('.copy-btn').forEach(function (boton) {
+    boton.addEventListener('click', function () {
+      var destino = document.getElementById(boton.getAttribute('data-target'));
+      copiar(destino.textContent, boton);
+    });
+  });
+})();
+</script>

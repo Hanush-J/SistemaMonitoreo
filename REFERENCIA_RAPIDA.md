@@ -8,7 +8,7 @@ ollama serve
 
 # Terminal 2: Aplicación
 cd /ruta/proyecto
-source entorno_redes/bin/activate
+source entorno/bin/activate
 sudo python3 login.py
 ```
 
